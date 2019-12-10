@@ -62,7 +62,7 @@ def reads(record, ErrorModel, n_pairs, cpu_number, output, seed,
         # except ValueError as e:
         #     logger.error('Skipping this record: %s' % record.id)
         #     return
-        forward, reverse = simulate_read(record, ErrorModel, i, cpu_number)
+        forward, reverse = simulate_read(record, ErrorModel, i, cpu_number, seed)
         if gc_bias:
             stiched_seq = forward.seq + reverse.seq
             gc_content = GC(stiched_seq)
@@ -84,7 +84,7 @@ def reads(record, ErrorModel, n_pairs, cpu_number, output, seed,
     return temp_file_name
 
 
-def simulate_read(record, ErrorModel, i, cpu_number):
+def simulate_read(record, ErrorModel, i, cpu_number, is_amplicon):
     """From a read pair from one genome (or sequence) according to an
     ErrorModel
 
@@ -124,6 +124,8 @@ def simulate_read(record, ErrorModel, i, cpu_number):
             0, len(record.seq) - read_length))
         # raise
 
+    if is_amplicon == 999:
+        forward_start = 0
     forward_end = forward_start + read_length
     bounds = (forward_start, forward_end)
     # create a perfect read
@@ -150,6 +152,11 @@ def simulate_read(record, ErrorModel, i, cpu_number):
         # is too large
         reverse_end = random.randrange(read_length, len(record.seq))
         reverse_start = reverse_end - read_length
+
+    if is_amplicon == 999:
+        reverse_end = len(record.seq)
+        reverse_start = reverse_end - read_length
+
     bounds = (reverse_start, reverse_end)
     # create a perfect read
     reverse = SeqRecord(
